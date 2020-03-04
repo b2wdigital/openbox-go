@@ -5,15 +5,11 @@ import (
 
 	"github.com/b2wdigital/goignite/pkg/config"
 	"github.com/b2wdigital/goignite/pkg/log/logrus"
-	"github.com/b2wdigital/openbox-go/examples/simple/internal/pkg/model/response"
-)
-
-var (
-	options *response.Default
+	"github.com/b2wdigital/openbox-go/examples/simple/internal/pkg/options"
 )
 
 func init() {
-	config.Add("local.message", "gen", "generator output path")
+	config.Add("local.message", "hello world!!!", "generator output path")
 }
 
 func Start(ctx context.Context) {
@@ -21,10 +17,12 @@ func Start(ctx context.Context) {
 
 	log.Info("starting application")
 
-	options = new(response.Default)
+	o := new(options.Options)
 
-	err := config.UnmarshalWithPath("local", &options)
+	err := config.UnmarshalWithPath("local", o)
 	if err != nil {
 		log.Error(err)
 	}
+
+	log.Infof("with configurable message %s", o.Message)
 }
