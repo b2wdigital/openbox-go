@@ -11,12 +11,12 @@ import (
 
 	"github.com/b2wdigital/goignite/pkg/config"
 	"github.com/b2wdigital/goignite/pkg/log/logrus"
-	"github.com/b2wdigital/openbox-go/internal/app/http/server/model"
+	"github.com/b2wdigital/openbox-go/internal/app/http/router/model"
 )
 
 const (
-	Output   = "generator.output"
-	Template = "generator.template"
+	Output   = "openbox.output"
+	Template = "openbox.template"
 )
 
 func init() {
@@ -38,7 +38,7 @@ func main() {
 
 	options := new(model.Options)
 
-	err = config.UnmarshalWithPath("generator", &options)
+	err = config.UnmarshalWithPath("openbox", &options)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +52,21 @@ func main() {
 	tmpl := template.Must(template.ParseFiles(options.Template))
 
 	data := model.Data{
+		Start: options.Start,
+		Stop: options.Stop,
 		RequestMaps: options.RequestMaps,
+	}
+
+	packages := getPackagesFromRequestMaps(data.RequestMaps)
+
+	if data.Start != nil {
+		data.Start.Alias = getAlias(data.Start.Package)
+		packages = append(packages, data.Start.Package)
+	}
+
+	if data.Stop != nil {
+		data.Stop.Alias = getAlias(data.Stop.Package)
+		packages = append(packages, data.Stop.Package)
 	}
 
 	for _, r := range data.RequestMaps {
@@ -63,7 +77,7 @@ func main() {
 		}
 	}
 
-	data.Packages = getPackages(data.RequestMaps)
+	data.Packages = getUniquePackages(packages)
 
 	var buf bytes.Buffer
 
@@ -79,7 +93,7 @@ func main() {
 
 }
 
-func getPackages(maps []*model.RequestMap) []*model.Package {
+func getPackagesFromRequestMaps(maps []*model.RequestMap) []string {
 	var packages []string
 
 	for _, v := range maps {
@@ -88,7 +102,10 @@ func getPackages(maps []*model.RequestMap) []*model.Package {
 			packages = append(packages, v.Body.Package)
 		}
 	}
+	return packages
+}
 
+func getUniquePackages(packages []string) []*model.Package {
 	packages = unique(packages)
 
 	var p []*model.Package

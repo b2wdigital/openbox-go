@@ -92,6 +92,13 @@ func main() {
 
 	logrus.Start()
 
+	{{- if .Start }}
+	{{ .Start.Alias }}.{{ .Start.Func }}(ctx)
+	{{- end }}
+    {{- if .Stop }}
+	defer {{ .Stop.Alias }}.{{ .Stop.Func }}(ctx)
+	{{- end }}
+
 	l := logrus.FromContext(ctx)
 
 	instance := echo.Start(ctx)
